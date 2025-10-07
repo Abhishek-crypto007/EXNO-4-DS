@@ -99,6 +99,7 @@ print("All processed BMI datasets saved successfully!")
 ```
 
 # OUTPUT
+![alt text](image.png)
 [Output Folder with all the files](processed_bmi)
 # RESULT:
 
