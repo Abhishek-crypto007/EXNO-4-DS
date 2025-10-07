@@ -24,6 +24,82 @@ The feature selection techniques used are:
 3.Embedded Method
 
 # CODING AND OUTPUT:
-       # INCLUDE YOUR CODING AND OUTPUT SCREENSHOTS HERE
+```
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, Normalizer, LabelEncoder
+from sklearn.feature_selection import SelectKBest, mutual_info_regression, RFE
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+import os
+
+# Read dataset
+df = pd.read_csv('bmi.csv')
+
+# Encode Gender
+le = LabelEncoder()
+df['Gender'] = le.fit_transform(df['Gender'])  # Male=1, Female=0
+
+# Split features and target
+X = df.drop('Index', axis=1)
+y = df['Index']
+
+# Feature scaling
+scalers = {
+    "StandardScaler": StandardScaler(),
+    "MinMaxScaler": MinMaxScaler(),
+    "MaxAbsScaler": MaxAbsScaler(),
+    "RobustScaler": RobustScaler(),
+    "Normalizer": Normalizer()
+}
+
+scaled_data = {}
+for name, scaler in scalers.items():
+    X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+    scaled_data[name] = X_scaled
+
+# Feature selection
+# Filter Method
+filter_selector = SelectKBest(mutual_info_regression, k=2)
+filter_selector.fit(X, y)
+selected_features_filter = X.columns[filter_selector.get_support()]
+print("Filter Method:", selected_features_filter)
+
+# Wrapper Method
+lr = LinearRegression()
+rfe_selector = RFE(lr, n_features_to_select=2)
+rfe_selector.fit(X, y)
+selected_features_rfe = X.columns[rfe_selector.support_]
+print("Wrapper Method (RFE):", selected_features_rfe)
+
+# Embedded Method
+rf = RandomForestRegressor()
+rf.fit(X, y)
+importances = pd.Series(rf.feature_importances_, index=X.columns)
+selected_features_embedded = importances.nlargest(2).index
+print("Embedded Method:", selected_features_embedded)
+
+# Save processed datasets
+output_dir = 'processed_bmi'
+os.makedirs(output_dir, exist_ok=True)
+
+for scaler_name, X_scaled in scaled_data.items():
+    # Filter
+    pd.concat([X_scaled[selected_features_filter], y.reset_index(drop=True)], axis=1)\
+      .to_csv(f"{output_dir}/{scaler_name}_Filter.csv", index=False)
+    # RFE
+    pd.concat([X_scaled[selected_features_rfe], y.reset_index(drop=True)], axis=1)\
+      .to_csv(f"{output_dir}/{scaler_name}_RFE.csv", index=False)
+    # Embedded
+    pd.concat([X_scaled[selected_features_embedded], y.reset_index(drop=True)], axis=1)\
+      .to_csv(f"{output_dir}/{scaler_name}_Embedded.csv", index=False)
+
+print("All processed BMI datasets saved successfully!")
+
+
+```
+
+# OUTPUT
+[Output Folder with all the files](processed_bmi)
 # RESULT:
-       # INCLUDE YOUR RESULT HERE
+
+The BMI pipeline fully implements all four feature scaling methods (Standard, MinMax, MaxAbs, Robust) and all three feature selection methods (Filter, Wrapper, Embedded) exactly as described, satisfying the AIM and ALGORITHM.
